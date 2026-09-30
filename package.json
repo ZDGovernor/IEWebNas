@@ -1,0 +1,13 @@
+{
+  "name": "ie-webdisk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "兼容 IE8+ 的在线文件上传下载站（登录 / 有效期 / 6位数字提取码）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

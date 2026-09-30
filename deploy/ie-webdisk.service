@@ -1,0 +1,34 @@
+[Unit]
+# 非 Docker 场景（1Panel 里的「网站 → Node 项目」或直接 systemd 托管）可用本文件
+# 用法：把项目放到 /opt/ie-webdisk，然后
+#   cp deploy/ie-webdisk.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now ie-webdisk
+Description=IE Webdisk (IE compatible file upload/download site)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ie-webdisk
+# 密码等敏感配置建议放到 /opt/ie-webdisk/.env（权限 600），用下面这行加载
+EnvironmentFile=-/opt/ie-webdisk/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=0.0.0.0
+Environment=DATA_DIR=/opt/ie-webdisk/data
+# 可选功能开关：默认 false（免登录、无提取码）
+Environment=REQUIRE_LOGIN=false
+Environment=REQUIRE_CODE=false
+Environment=MAX_FILE_SIZE=524288000
+Environment=EXPIRE_DAYS=1,3,7,30
+Environment=DEFAULT_EXPIRE_DAYS=7
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+# 按需调整运行用户
+User=root
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ie-webdisk
+
+[Install]
+WantedBy=multi-user.target

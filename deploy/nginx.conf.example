@@ -1,0 +1,45 @@
+# Nginx 反向代理示例（1Panel：网站 → 反向代理 → 源文）
+#
+# 关键点：
+#   1. client_max_body_size 必须 >= 应用侧的 MAX_FILE_SIZE，否则大文件会被 Nginx 挡下来（413）
+#   2. proxy_request_buffering off 让上传直接透传，省内存、支持大文件
+#   3. 下载超时调大，避免大文件传到一半被断开
+#   4. WebSocket 用不到，但 keep-alive 建议保留
+
+server {
+    listen 80;
+    server_name pan.example.com;
+
+    # 允许上传的最大体积（与 MAX_FILE_SIZE 保持一致，默认 500MB）
+    client_max_body_size 500m;
+    client_body_timeout 600s;
+
+    access_log /var/log/nginx/ie-webdisk.access.log;
+    error_log  /var/log/nginx/ie-webdisk.error.log;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        # 让应用知道外部是 https，从而给 Cookie 加 Secure
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection        "";
+
+        # 大文件上传/下载
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    600s;
+        proxy_read_timeout    600s;
+    }
+
+    # 静态资源交给 Nginx 直接返回更快（可选）
+    location /static/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        expires 1h;
+    }
+}

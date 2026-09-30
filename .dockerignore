@@ -1,0 +1,9 @@
+node_modules/
+data/
+test/tmp/
+.env
+*.log
+.DS_Store
+.git/
+.gitignore
+.tmp-*.js
